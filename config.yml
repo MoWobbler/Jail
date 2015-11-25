@@ -1,0 +1,23 @@
+# The world the jail is in
+world: world
+
+# The two corners of the jail. Jail will be a cube inside these two corners
+corner1:
+  x: -10
+  y: 50
+  z: -10
+corner2:
+  x: 10
+  y: 70
+  z: 10
+
+# The point at which jailed players will be teleported to
+spawn:
+  x: 0
+  y: 63
+  z: 0
+
+blocked_commands:
+  - me
+  - world
+  - op

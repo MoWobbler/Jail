@@ -1,0 +1,14 @@
+name: Jail
+main: org.c4k3.Jail.Jail
+version: 1 #1.7.9 build 1938
+author: C4K3.net
+description: A minimalist jail plugin.
+commands:
+  jail:
+    description: Jail a player.
+  unjail:
+    description: Unjail a player.
+  jailinfo:
+    description: Show info about jail in general or a particular jailed player.
+  jailreload:
+    description: Reload the jail config.
