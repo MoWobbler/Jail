@@ -39,25 +39,25 @@ public class SQLite {
 
 			switch (user_version) {
 
-			/* Database is brand new. Create tables */
-			case 0: {
-				plugin.getLogger().info("Database not yet created. Creating ...");
-				String query = "CREATE TABLE jailedplayers"
-						+ "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
-						+ "uuid BLOB,"
-						+ "playername TEXT,"
-						+ "reason TEXT,"
-						+ "jailer TEXT,"
-						+ "world TEXT,"
-						+ "x INT,"
-						+ "y INT,"
-						+ "z INT,"
-						+ "jailedtime INT,"
-						+ "to_be_released INT);"
-						+ "PRAGMA user_version = 1;";
-				st.executeUpdate(query);
-				break;
-			}
+				/* Database is brand new. Create tables */
+				case 0: {
+						plugin.getLogger().info("Database not yet created. Creating ...");
+						String query = "CREATE TABLE jailedplayers"
+							+ "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
+							+ "uuid BLOB,"
+							+ "playername TEXT,"
+							+ "reason TEXT,"
+							+ "jailer TEXT,"
+							+ "world TEXT,"
+							+ "x INT,"
+							+ "y INT,"
+							+ "z INT,"
+							+ "jailedtime INT,"
+							+ "to_be_released INT);"
+							+ "PRAGMA user_version = 1;";
+						st.executeUpdate(query);
+						break;
+				}
 
 			}
 
@@ -210,3 +210,4 @@ public class SQLite {
 	}
 
 }
+

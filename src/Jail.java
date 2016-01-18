@@ -33,3 +33,4 @@ public class Jail extends JavaPlugin {
 	}
 
 }
+

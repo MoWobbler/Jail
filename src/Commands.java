@@ -153,9 +153,9 @@ public class Commands implements CommandExecutor {
 
 			SimpleDateFormat sdf = new SimpleDateFormat("d MMMM yyyy, H:m:s");
 			String msg = jailedplayer.playername + " (" + jailedplayer.uuid + ")"
-					+ " was jailed on " + sdf.format(new Date(jailedplayer.jailed_time * 1000L))
-					+ " by " + jailedplayer.jailer
-					+ " for" + jailedplayer.reason + ".";
+				+ " was jailed on " + sdf.format(new Date(jailedplayer.jailed_time * 1000L))
+				+ " by " + jailedplayer.jailer
+				+ " for" + jailedplayer.reason + ".";
 			if (jailedplayer.to_be_released)
 				msg += "\nThis player is set to be released";
 
@@ -169,3 +169,4 @@ public class Commands implements CommandExecutor {
 	}
 
 }
+
