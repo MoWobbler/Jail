@@ -1,5 +1,5 @@
 name: Jail
-main: org.c4k3.Jail.Jail
+main: net.simpvp.Jail.Jail
 version: 1 #1.7.9 build 1938
 author: C4K3.net
 description: A minimalist jail plugin.

@@ -1,4 +1,4 @@
-package org.c4k3.Jail;
+package net.simpvp.Jail;
 
 import java.util.HashSet;
 
