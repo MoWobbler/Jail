@@ -9,6 +9,10 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 
 public class JailedEventListener implements Listener {
 
@@ -75,6 +79,32 @@ public class JailedEventListener implements Listener {
 		event.setCancelled(true);
 		event.getPlayer().sendMessage(ChatColor.RED + "Jailed players are not allowed to use that command.");
 	}
+
+	@EventHandler(priority=EventPriority.NORMAL,ignoreCancelled=true)
+	public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+		if (!(Jail.jailed_players.contains(event.getDamager().getUniqueId())))
+			return;
+
+		event.setCancelled(true);
+	}
+
+	@EventHandler(priority=EventPriority.NORMAL,ignoreCancelled=true)
+	public void onInventoryOpen(InventoryOpenEvent event) {
+		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId()))
+				|| event.getInventory().getType() == InventoryType.PLAYER)
+			return;
+
+		event.setCancelled(true);
+	}
+
+	@EventHandler(priority=EventPriority.NORMAL,ignoreCancelled=true)
+	public void onPlayerPickupItem(PlayerPickupItemEvent event) {
+		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
+			return;
+
+		event.setCancelled(true);
+	}
+
 
 }
 
