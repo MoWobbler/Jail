@@ -209,5 +209,26 @@ public class SQLite {
 		}
 	}
 
+	/**
+	 * Gets how many players have been jailed in total
+	 */
+	public static int amount_of_jailed_players() {
+		int ret = -1;
+		try {
+			String query = "SELECT COUNT(*) FROM jailedplayers";
+			PreparedStatement st = conn.prepareStatement(query);
+			ResultSet rs = st.executeQuery();
+			while (rs.next())
+				ret = rs.getInt("count(*)");
+
+			rs.close();
+			st.close();
+		} catch (Exception e) {
+			plugin.getLogger().info(e.getMessage());
+		}
+
+		return ret;
+	}
+
 }
 

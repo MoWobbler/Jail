@@ -165,6 +165,7 @@ public class Commands implements CommandExecutor {
 			send_message("The jail is in world " + Config.world + ". The two jail corners are at: " + Config.x1 + " " + Config.y1 + " " + Config.z1 + ", and " + Config.x2 + " " + Config.y2 + " " + Config.z2, player, ChatColor.GREEN);
 			send_message("The jail spawn point is at " + Config.spawn.getWorld().getName() + " " + Config.spawn.getBlockX() + " " + Config.spawn.getBlockY() + " " + Config.spawn.getBlockZ(), player, ChatColor.GREEN);
 			send_message("There are " + Jail.jailed_players.size() + " jailed players online.", player, ChatColor.GREEN);
+			send_message("In total there are " + SQLite.amount_of_jailed_players() + " jailed players.", player, ChatColor.GREEN);
 		}
 	}
 
