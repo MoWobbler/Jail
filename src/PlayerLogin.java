@@ -4,17 +4,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class PlayerLogin implements Listener {
 
-	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled=true)
-	public void onPlayerLogin(AsyncPlayerPreLoginEvent event) {
-		if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED)
-			return;
-
-		final JailedPlayer jailedplayer = SQLite.get_player_info(event.getUniqueId());
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled=true)
+	public void onPlayerLogin(PlayerJoinEvent event) {
+		final JailedPlayer jailedplayer = SQLite.get_player_info(event.getPlayer().getUniqueId());
 		if (jailedplayer == null)
 			return;
 
@@ -45,7 +42,7 @@ public class PlayerLogin implements Listener {
 			return;
 		}
 
-		Jail.instance.getLogger().info("Jailed player " + event.getName() + " has connected.");
+		Jail.instance.getLogger().info("Jailed player " + event.getPlayer().getName() + " has connected.");
 		jailedplayer.add();
 	}
 
