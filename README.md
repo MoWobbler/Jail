@@ -5,7 +5,7 @@ A simple Bukkit plugin that lets admins jail players as punishment.
 
 Commands
 -----
-All commands are usable only be admins.
+All commands are usable only be ops.
 
 ```
 /jail <player> <reason> [-a]
@@ -27,6 +27,10 @@ If used without arguments, gives general info about the jail. If a player is spe
 ```
 - Reloads the configuration.
 
+Installation
+-----
+Drop the jar into the plugins folder, the next time the server is started the plugin will load with default settings, and create a config.yml in the Jail directory.
+
 Configuration
 -----
-The plugin is configured using the config.yml file. It should be automatically generated, from which it is possible to change the settings. For an example, see the config.yml file here.
+The plugin is configured using the config.yml file. It should be automatically generated. All possible settings are described in comments in the config file, and can also be viewed in the config.yml file here.

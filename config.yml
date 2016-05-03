@@ -17,6 +17,7 @@ spawn:
   y: 63
   z: 0
 
+# Commands that cannot be used by jailed players
 blocked_commands:
   - me
   - world
