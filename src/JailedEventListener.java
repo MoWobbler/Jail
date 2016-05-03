@@ -14,6 +14,7 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 
 public class JailedEventListener implements Listener {
 
@@ -108,6 +109,14 @@ public class JailedEventListener implements Listener {
 
 	@EventHandler(priority=EventPriority.NORMAL,ignoreCancelled=true)
 	public void onPlayerBreakBlock(BlockBreakEvent event) {
+		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
+			return;
+
+		event.setCancelled(true);
+	}
+
+	@EventHandler(priority=EventPriority.NORMAL,ignoreCancelled=true)
+	public void onPlayerBlockPlace(BlockPlaceEvent event) {
 		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
 			return;
 
