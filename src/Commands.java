@@ -2,12 +2,22 @@ package net.simpvp.Jail;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.UUID;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.Location;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class Commands implements CommandExecutor {
 	//FIXME: Write docs for entire class
@@ -67,23 +77,16 @@ public class Commands implements CommandExecutor {
 			return;
 		}
 
-		@SuppressWarnings("deprecation") /* is not stored by name, but by uuid */
+		@SuppressWarnings("deprecation") /* Warnings have been read */
 		Player target = plugin.getServer().getPlayer(args[0]);
-		if (target == null) {
-			send_message("No such player found. The player must be online. If the player is offline, ban the player instead.", player, ChatColor.RED);
-			return;
-		}
 
+		UUID jailer_uuid = null;
 		String jailer = null;
 		if (player == null) {
 			jailer = "CONSOLE";
 		} else {
 			jailer = player.getName();
-		}
-
-		if (Jail.jailed_players.contains(target.getUniqueId())) {
-			send_message(target.getName() + " is already jailed.", player, ChatColor.RED);
-			return;
+			jailer_uuid = player.getUniqueId();
 		}
 
 		boolean announce = false;
@@ -96,16 +99,112 @@ public class Commands implements CommandExecutor {
 			}
 		}
 
-		JailedPlayer jailedplayer = new JailedPlayer(target.getUniqueId(), target.getName(), reason, jailer, target.getLocation(), (int) (System.currentTimeMillis() / 1000L), false);
-		target.teleport(Config.get_spawn());
-		jailedplayer.add();
-		announce_message("Jailing " + target.getName() + " for:" + reason, player);
-		if (announce) {
-			for (Player onplayer : plugin.getServer().getOnlinePlayers())
-				onplayer.sendMessage(ChatColor.LIGHT_PURPLE + "[Server] Jailing " + target.getName() + " for:" + reason);
+		if (target == null) {
+			get_uuid(args[0], reason, jailer_uuid, jailer, announce);
 		} else {
+			effect_jail(target.getUniqueId(), target.getName(), reason, jailer_uuid, jailer, announce);
+		}
+
+	}
+
+	private void get_uuid(final String target_name, final String reason, final UUID jailer_uuid, final String jailer, final boolean announce) {
+		new BukkitRunnable() {
+			@Override
+			public void run() {
+				try {
+					URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + target_name);
+					URLConnection conn = url.openConnection();
+					conn.connect();
+					BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+					String resp = reader.readLine();
+					if (resp == null)
+						resp = "";
+
+					Pattern p = Pattern.compile("\"id\":\"(\\S+?)\"");
+					Matcher m = p.matcher(resp);
+					m.find();
+					String uuid_str = m.group(1);
+					uuid_str = uuid_str.replaceAll("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5");
+
+					final UUID uuid = UUID.fromString(uuid_str);
+					new BukkitRunnable() {
+						@Override
+						public void run() {
+							effect_jail(uuid, target_name, reason,
+									jailer_uuid, jailer, announce);
+						}
+					}.runTask(plugin);
+
+				} catch (Exception e) {
+					new BukkitRunnable() {
+						@Override
+						public void run() {
+							send_message("Error retrieving data for " + target_name,
+								       plugin.getServer().getPlayer(jailer_uuid),
+								       ChatColor.RED);
+						}
+					}.runTask(plugin);
+				}
+
+			}
+		}.runTaskAsynchronously(plugin);
+	}
+
+	/**
+	 * Actually carries out the jailing of the player.
+	 */
+	private void effect_jail(UUID uuid, String target_name, String reason,
+			UUID jailer_uuid, String sjailer, boolean announce) {
+
+		Player jailer = null;
+		if (jailer_uuid != null) {
+			jailer = plugin.getServer().getPlayer(jailer_uuid);
+			if (jailer != null)
+				sjailer = jailer.getName();
+		}
+
+		JailedPlayer tmp = SQLite.get_player_info(uuid);
+		if (tmp != null) {
+			send_message("That player is already jailed, see /jailinfo " + tmp.playername + " for more information.", jailer, ChatColor.RED);
+			return;
+		}
+
+		OfflinePlayer offline_tmp = plugin.getServer().getOfflinePlayer(uuid);
+		if (offline_tmp.getFirstPlayed() == 0) {
+			send_message("That player has never played on this server, you cannot jail them. If you wish to prevent them from joining, ban them instead.", jailer, ChatColor.RED);
+			return;
+		}
+
+		boolean is_online;
+		Location location;
+		Player target = plugin.getServer().getPlayer(uuid);
+		if (target == null) {
+			is_online = false;
+			location = new Location(plugin.getServer().getWorld("world"), 0, 63, 0);
+		} else {
+			is_online = true;
+			location = target.getLocation();
+			target_name = target.getName();
+		}
+
+		JailedPlayer jailedplayer = new JailedPlayer(uuid, target_name,
+				reason, sjailer, location,
+				(int) (System.currentTimeMillis() / 1000L),
+				false, is_online);
+
+		if (target != null) {
+			target.teleport(Config.get_spawn());
+			jailedplayer.add();
+		}
+
+		announce_message("Jailing " + target_name + " for:" + reason, jailer);
+		if (announce) {
+			for (Player p : plugin.getServer().getOnlinePlayers())
+				p.sendMessage(ChatColor.LIGHT_PURPLE + "[Server] Jailing " + target_name + " for:" + reason);
+		} else if (target != null) {
 			target.sendMessage(ChatColor.RED + "You have been jailed for:" + reason);
 		}
+
 		jailedplayer.insert();
 	}
 

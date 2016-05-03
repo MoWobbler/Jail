@@ -53,6 +53,8 @@ public class SQLite {
 							+ "y INT,"
 							+ "z INT,"
 							+ "jailedtime INT,"
+							/* to_be_released is now also used for to-be-jailed players
+							 * least significant bit = to_be_released, 2-bit = online*/
 							+ "to_be_released INT);"
 							+ "PRAGMA user_version = 1;";
 						st.executeUpdate(query);
@@ -105,7 +107,8 @@ public class SQLite {
 				ret = new JailedPlayer(uuid, rs.getString("playername"), 
 						rs.getString("reason"), rs.getString("jailer"), 
 						location, rs.getInt("jailedtime"),
-						rs.getInt("to_be_released") != 0);
+						(rs.getInt("to_be_released") & 1) != 0,
+						(rs.getInt("to_be_released") & 2) == 0);
 			}
 
 			rs.close();
@@ -137,10 +140,12 @@ public class SQLite {
 						(double) rs.getInt("x") + 0.5, 
 						(double) rs.getInt("y"), 
 						(double) rs.getInt("z") + 0.5);
-				ret = new JailedPlayer(UUID.fromString(rs.getString("uuid")), rs.getString("playername"), 
+				ret = new JailedPlayer(UUID.fromString(rs.getString("uuid")),
+						rs.getString("playername"), 
 						rs.getString("reason"), rs.getString("jailer"), 
 						location, rs.getInt("jailedtime"),
-						rs.getInt("to_be_released") != 0);
+						(rs.getInt("to_be_released") & 1) != 0,
+						(rs.getInt("to_be_released") & 2) == 0);
 			}
 
 			rs.close();
@@ -158,7 +163,8 @@ public class SQLite {
 	 */
 	public static void insert_player_info(JailedPlayer jailedplayer) {
 		try {
-			String query = "INSERT INTO jailedplayers (uuid, playername, reason, jailer, world, x, y, z, jailedtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			String query = "INSERT INTO jailedplayers (uuid, playername, reason, jailer, world, x, y, z, jailedtime, to_be_released)"
+				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement st = conn.prepareStatement(query);
 			st.setString(1, jailedplayer.uuid.toString());
 			st.setString(2, jailedplayer.playername);
@@ -169,6 +175,7 @@ public class SQLite {
 			st.setInt(7, jailedplayer.location.getBlockY());
 			st.setInt(8, jailedplayer.location.getBlockZ());
 			st.setInt(9, jailedplayer.jailed_time);
+			st.setInt(10, jailedplayer.get_to_be_released());
 
 			st.executeUpdate();
 			st.close();
@@ -202,6 +209,44 @@ public class SQLite {
 			String query = "UPDATE jailedplayers SET to_be_released = 1 WHERE uuid = ?";
 			PreparedStatement st = conn.prepareStatement(query);
 			st.setString(1, uuid.toString());
+			st.executeUpdate();
+			st.close();
+		} catch (Exception e) {
+			plugin.getLogger().info(e.getMessage());
+		}
+	}
+
+	/**
+	 * Sets that a player has been online.
+	 * @param uuid UUID of the player that has been online
+	 */
+	public static void set_has_been_online(UUID uuid) {
+		try {
+			String query = "UPDATE jailedplayers SET to_be_released = 0 WHERE uuid = ?";
+			PreparedStatement st = conn.prepareStatement(query);
+			st.setString(1, uuid.toString());
+			st.executeUpdate();
+			st.close();
+		} catch (Exception e) {
+			plugin.getLogger().info(e.getMessage());
+		}
+	}
+
+	/**
+	 * Updates the stored location for a given player.
+	 * @param uuid UUID of the player
+	 * @param location The location to be updated to
+	 */
+	public static void update_player_location(UUID uuid, Location location) {
+		try {
+			String query = "UPDATE jailedplayers SET world = ?,"
+				+ "x = ?, y = ?, z = ? WHERE uuid = ?";
+			PreparedStatement st = conn.prepareStatement(query);
+			st.setString(1, location.getWorld().getName());
+			st.setInt(2, location.getBlockX());
+			st.setInt(3, location.getBlockY());
+			st.setInt(4, location.getBlockZ());
+			st.setString(5, uuid.toString());
 			st.executeUpdate();
 			st.close();
 		} catch (Exception e) {

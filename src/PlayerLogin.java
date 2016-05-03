@@ -40,6 +40,11 @@ public class PlayerLogin implements Listener {
 			}.runTaskTimer(Jail.instance, 20, 20);
 
 			return;
+		} else if (!jailedplayer.online) {
+			jailedplayer.online = true;
+			SQLite.update_player_location(jailedplayer.uuid,
+					event.getPlayer().getLocation());
+			SQLite.set_has_been_online(jailedplayer.uuid);
 		}
 
 		Jail.instance.getLogger().info("Jailed player " + event.getPlayer().getName() + " has connected.");

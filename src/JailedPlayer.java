@@ -15,8 +15,9 @@ public class JailedPlayer {
 	public Location location;
 	public int jailed_time;
 	public boolean to_be_released;
+	public boolean online;
 
-	public JailedPlayer(UUID uuid, String playername, String reason, String jailer, Location location, int jailed_time, boolean to_be_released) {
+	public JailedPlayer(UUID uuid, String playername, String reason, String jailer, Location location, int jailed_time, boolean to_be_released, boolean online) {
 		this.uuid = uuid;
 		this.playername = playername;
 		this.reason = reason;
@@ -24,6 +25,7 @@ public class JailedPlayer {
 		this.location = location;
 		this.jailed_time = jailed_time;
 		this.to_be_released = to_be_released;
+		this.online = online;
 	}
 
 	public void add() {
@@ -32,6 +34,15 @@ public class JailedPlayer {
 
 	public void insert() {
 		SQLite.insert_player_info(this);
+	}
+
+	public int get_to_be_released() {
+		int ret = 0;
+		if (this.to_be_released)
+			ret ^= 1;
+		if (!this.online)
+			ret ^= 2;
+		return ret;
 	}
 
 }
