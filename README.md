@@ -5,7 +5,7 @@ A simple Bukkit plugin that lets admins jail players as punishment.
 
 Commands
 -----
-All commands are usable only be ops.
+All commands are usable only by ops.
 
 ```
 /jail <player> <reason> [-a]
