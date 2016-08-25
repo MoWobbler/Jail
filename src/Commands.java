@@ -255,7 +255,18 @@ public class Commands implements CommandExecutor {
 		}
 
 		if (args.length == 1 ) {
-			JailedPlayer jailedplayer = SQLite.get_player_info(args[0]);
+			JailedPlayer jailedplayer;
+
+			/* Player name is not used in ways that break after the
+			 * UUID change */
+			@SuppressWarnings("deprecation")
+			Player target = Jail.instance.getServer().getPlayerExact(args[0]);
+
+			if (target == null) {
+				jailedplayer = SQLite.get_player_info(args[0]);
+			} else {
+				jailedplayer = SQLite.get_player_info(target.getUniqueId());
+			}
 
 			if (jailedplayer == null) {
 				send_message("That player does not appear to be jailed.", player, ChatColor.RED);
