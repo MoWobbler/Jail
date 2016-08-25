@@ -99,6 +99,11 @@ public class Commands implements CommandExecutor {
 			}
 		}
 
+		if (reason.equals("")) {
+			send_message("Invalid usage. You must specify a reason for jailing.", player, ChatColor.RED);
+			return;
+		}
+
 		if (target == null) {
 			get_uuid(args[0], reason, jailer_uuid, jailer, announce);
 		} else {
