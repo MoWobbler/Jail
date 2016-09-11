@@ -27,6 +27,13 @@ If used without arguments, gives general info about the jail. If a player is spe
 ```
 - Reloads the configuration.
 
+Compiling
+-----
+Just run `make` in the directory. To specify the bukkit jar and/or java version, run it as
+```
+make BUKKIT=/path/to/bukkit.jar JAVA=1.7
+```
+
 Installation
 -----
 Drop the jar into the plugins folder, the next time the server is started the plugin will load with default settings, and create a config.yml in the Jail directory.
