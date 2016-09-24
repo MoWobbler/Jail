@@ -170,7 +170,13 @@ public class Commands implements CommandExecutor {
 
 		JailedPlayer tmp = SQLite.get_player_info(uuid);
 		if (tmp != null) {
-			send_message("That player is already jailed, see /jailinfo " + tmp.playername + " for more information.", jailer, ChatColor.RED);
+			if (tmp.to_be_released) {
+				SQLite.set_has_been_online(uuid);
+				announce_message(tmp.playername
+						+ " was set to be unjailed, undid that so they will remain jailed.", jailer);
+			} else {
+				send_message("That player is already jailed, see /jailinfo " + tmp.playername + " for more information.", jailer, ChatColor.RED);
+			}
 			return;
 		}
 
