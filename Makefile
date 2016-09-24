@@ -13,7 +13,7 @@ class_files:
 	$(JC) $(JFLAGS) $(SOURCEFILES)
 
 jar_file: class_files
-	jar -cfe ./$(PLUGIN).jar ./*
+	jar -cf ./$(PLUGIN).jar ./*
 
 
 clean:
