@@ -233,7 +233,7 @@ public class Commands implements CommandExecutor {
 		/* at this point it is assumed the player is not online */
 		JailedPlayer jailedplayer = SQLite.get_player_info(args[0]);
 
-		if (jailedplayer.online == false) {
+		if (jailedplayer != null && jailedplayer.online == false) {
 			SQLite.delete_player_info(jailedplayer.uuid);
 			announce_message("Unjailing never-jailed player " + jailedplayer.playername, player);
 			return;
