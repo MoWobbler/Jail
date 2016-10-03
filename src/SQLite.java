@@ -6,8 +6,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.UUID;
+import java.util.ArrayList;
 
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 
 public class SQLite {
 
@@ -56,7 +58,25 @@ public class SQLite {
 							/* to_be_released is now also used for to-be-jailed players
 							 * least significant bit = to_be_released, 2-bit = online*/
 							+ "to_be_released INT);"
-							+ "PRAGMA user_version = 1;";
+							+ "CREATE TABLE jailedips"
+							+ "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
+							+ "ip TEXT NOT NULL,"
+							+ "name TEXT NOT NULL,"
+							+ "uuid BLOB,"
+							+ "UNIQUE(ip, name));"
+							+ "PRAGMA user_version = 2;";
+						st.executeUpdate(query);
+						break;
+				}
+				case 1: {
+						plugin.getLogger().info("Migrating database to version 2 ...");
+						String query = "CREATE TABLE jailedips"
+							+ "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
+							+ "ip TEXT NOT NULL,"
+							+ "name TEXT NOT NULL,"
+							+ "uuid BLOB,"
+							+ "UNIQUE(ip, name));"
+							+ "PRAGMA user_version = 2;";
 						st.executeUpdate(query);
 						break;
 				}
@@ -195,9 +215,16 @@ public class SQLite {
 			st.setString(1, uuid.toString());
 			st.executeUpdate();
 			st.close();
+
+			query = "DELETE FROM jailedips WHERE uuid = ?";
+			st = conn.prepareStatement(query);
+			st.setString(1, uuid.toString());
+			st.executeUpdate();
+			st.close();
 		} catch (Exception e) {
 			plugin.getLogger().info(e.getMessage());
 		}
+
 	}
 
 	/**
@@ -208,6 +235,12 @@ public class SQLite {
 		try {
 			String query = "UPDATE jailedplayers SET to_be_released = 1 WHERE uuid = ?";
 			PreparedStatement st = conn.prepareStatement(query);
+			st.setString(1, uuid.toString());
+			st.executeUpdate();
+			st.close();
+
+			query = "DELETE FROM jailedips WHERE uuid = ?";
+			st = conn.prepareStatement(query);
 			st.setString(1, uuid.toString());
 			st.executeUpdate();
 			st.close();
@@ -273,6 +306,50 @@ public class SQLite {
 		}
 
 		return ret;
+	}
+
+	/**
+	 * Gets the name of all jailed players from the given ip
+	 */
+	public static String get_ip_jailed(String ip) {
+		String ret = null;
+		try {
+			String query = "SELECT * FROM jailedips WHERE ip = ?";
+			PreparedStatement st = conn.prepareStatement(query);
+			st.setString(1, ip);
+			ResultSet rs = st.executeQuery();
+
+			while (rs.next()) {
+				if (ret == null) {
+					ret = rs.getString("name");
+				} else {
+					ret += ", " + rs.getString("name");
+				}
+			}
+			rs.close();
+			st.close();
+		} catch (Exception e) {
+			plugin.getLogger().info(e.getMessage());
+		}
+
+		return ret;
+	}
+
+	/**
+	 * Inserts the given player into the jailedips database.
+	 */
+	public static void insert_ip_jailed(Player player) {
+		try {
+			String query = "INSERT OR IGNORE INTO jailedips(ip, name, uuid) VALUES(?, ?, ?)";
+			PreparedStatement st = conn.prepareStatement(query);
+			st.setString(1, player.getAddress().getHostString());
+			st.setString(2, player.getName());
+			st.setString(3, player.getUniqueId().toString());
+			st.executeUpdate();
+			st.close();
+		} catch (Exception e) {
+			plugin.getLogger().info(e.getMessage());
+		}
 	}
 
 }

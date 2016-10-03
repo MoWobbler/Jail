@@ -206,6 +206,7 @@ public class Commands implements CommandExecutor {
 		if (target != null) {
 			target.teleport(Config.get_spawn());
 			jailedplayer.add();
+			SQLite.insert_ip_jailed(target);
 		}
 
 		announce_message("Jailing " + target_name + " for:" + reason, jailer);
@@ -248,7 +249,7 @@ public class Commands implements CommandExecutor {
 		if (jailedplayer != null) {
 			SQLite.set_to_be_released(jailedplayer.uuid);
 			announce_message("Unjailing offline player " + jailedplayer.playername, player);
-			return;		
+			return;
 		}
 
 		send_message("No such player found.", player, ChatColor.RED);
