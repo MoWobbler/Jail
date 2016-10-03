@@ -1,6 +1,6 @@
 name: Jail
 main: net.simpvp.Jail.Jail
-version: 3
+version: 4
 author: C4K3.net
 description: A minimalist jail plugin.
 commands:
