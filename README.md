@@ -1,7 +1,9 @@
 Jail
 =====
 
-A simple Bukkit plugin that lets admins jail players as punishment. 
+A simple Bukkit plugin that lets admins jail players as punishment.
+
+Jailed players are restricted to the jail area defined in the config. They are mostly unable to interact with the world, and are unable to use the commands specified in the config. Jailed players can die, but do not drop their items on death, and non-jailed players can kill jailed players.
 
 Commands
 -----
@@ -29,7 +31,9 @@ If used without arguments, gives general info about the jail. If a player is spe
 
 Compiling
 -----
-Just run `make` in the directory. To specify the bukkit jar and/or java version, run it as
+Requires a Java JDK, *make*, and a bukkit jar.
+
+To compile, run `make` in the directory. To specify the bukkit jar and/or java version, run it as
 ```
 make BUKKIT=/path/to/bukkit.jar JAVA=1.7
 ```
