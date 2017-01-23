@@ -21,7 +21,7 @@ public class JailedEventListener implements Listener {
 	/**
 	 * Ensures dead jailed players keep their inventory.
 	 */
-	@EventHandler(priority=EventPriority.NORMAL, ignoreCancelled=true)
+	@EventHandler(priority=EventPriority.LOWEST, ignoreCancelled=true)
 	public void onPlayerDeath(PlayerDeathEvent event) {
 		if (!(Jail.jailed_players.contains(event.getEntity().getUniqueId())))
 			return;
@@ -33,7 +33,7 @@ public class JailedEventListener implements Listener {
 	/**
 	 * Ensure that jailed players respawn in the jail
 	 */
-	@EventHandler(priority=EventPriority.NORMAL, ignoreCancelled=true)
+	@EventHandler(priority=EventPriority.LOWEST, ignoreCancelled=true)
 	public void onPlayerRespawn(PlayerRespawnEvent event) {
 		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
 			return;
@@ -45,7 +45,7 @@ public class JailedEventListener implements Listener {
 	 * Teleports all jailed players outside spawn back to the inside,
 	 * preventing them from leaving
 	 */
-	@EventHandler(priority=EventPriority.NORMAL, ignoreCancelled=true)
+	@EventHandler(priority=EventPriority.LOWEST, ignoreCancelled=true)
 	public void onPlayerMove(PlayerMoveEvent event) {
 		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
 			return;
@@ -60,7 +60,7 @@ public class JailedEventListener implements Listener {
 	/**
 	 * Prevent jailed players from dropping any items
 	 */
-	@EventHandler(priority=EventPriority.NORMAL, ignoreCancelled=true)
+	@EventHandler(priority=EventPriority.LOWEST, ignoreCancelled=true)
 	public void onPlayerDropItem(PlayerDropItemEvent event) {
 		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
 			return;
@@ -69,7 +69,7 @@ public class JailedEventListener implements Listener {
 		event.getPlayer().sendMessage(ChatColor.RED + "Jailed players are not allowed to drop items.");
 	}
 
-	@EventHandler(priority=EventPriority.NORMAL,ignoreCancelled=true)
+	@EventHandler(priority=EventPriority.LOWEST,ignoreCancelled=true)
 	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
 		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
 			return;
@@ -82,7 +82,7 @@ public class JailedEventListener implements Listener {
 		event.getPlayer().sendMessage(ChatColor.RED + "Jailed players are not allowed to use that command.");
 	}
 
-	@EventHandler(priority=EventPriority.NORMAL,ignoreCancelled=true)
+	@EventHandler(priority=EventPriority.LOWEST,ignoreCancelled=true)
 	public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
 		if (!(Jail.jailed_players.contains(event.getDamager().getUniqueId())))
 			return;
@@ -90,7 +90,7 @@ public class JailedEventListener implements Listener {
 		event.setCancelled(true);
 	}
 
-	@EventHandler(priority=EventPriority.NORMAL,ignoreCancelled=true)
+	@EventHandler(priority=EventPriority.LOWEST,ignoreCancelled=true)
 	public void onInventoryOpen(InventoryOpenEvent event) {
 		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId()))
 				|| event.getInventory().getType() == InventoryType.PLAYER)
@@ -99,7 +99,7 @@ public class JailedEventListener implements Listener {
 		event.setCancelled(true);
 	}
 
-	@EventHandler(priority=EventPriority.NORMAL,ignoreCancelled=true)
+	@EventHandler(priority=EventPriority.LOWEST,ignoreCancelled=true)
 	public void onPlayerPickupItem(PlayerPickupItemEvent event) {
 		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
 			return;
@@ -107,7 +107,7 @@ public class JailedEventListener implements Listener {
 		event.setCancelled(true);
 	}
 
-	@EventHandler(priority=EventPriority.NORMAL,ignoreCancelled=true)
+	@EventHandler(priority=EventPriority.LOWEST,ignoreCancelled=true)
 	public void onPlayerBreakBlock(BlockBreakEvent event) {
 		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
 			return;
@@ -115,7 +115,7 @@ public class JailedEventListener implements Listener {
 		event.setCancelled(true);
 	}
 
-	@EventHandler(priority=EventPriority.NORMAL,ignoreCancelled=true)
+	@EventHandler(priority=EventPriority.LOWEST,ignoreCancelled=true)
 	public void onPlayerBlockPlace(BlockPlaceEvent event) {
 		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
 			return;
