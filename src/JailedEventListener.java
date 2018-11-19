@@ -12,7 +12,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
@@ -101,8 +101,8 @@ public class JailedEventListener implements Listener {
 	}
 
 	@EventHandler(priority=EventPriority.LOWEST,ignoreCancelled=true)
-	public void onPlayerPickupItem(PlayerPickupItemEvent event) {
-		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
+	public void onEntityPickupItem(EntityPickupItemEvent event) {
+		if (!(Jail.jailed_players.contains(event.getEntity().getUniqueId())))
 			return;
 
 		event.setCancelled(true);
