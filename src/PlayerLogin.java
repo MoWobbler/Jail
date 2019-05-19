@@ -15,6 +15,7 @@ public class PlayerLogin implements Listener {
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled=true)
 	public void onPlayerLogin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
+		SQLite.insert_ip(player);
 		final JailedPlayer jailedplayer = SQLite.get_player_info(player.getUniqueId());
 		if (jailedplayer == null) {
 			String jailed_friends = SQLite.get_ip_jailed(

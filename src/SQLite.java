@@ -20,6 +20,7 @@ public class SQLite {
 	/**
 	 * Opens the SQLite connection.
 	 */
+	@SuppressWarnings("fallthrough")
 	public static void connect() {
 
 		String database = "jdbc:sqlite:plugins/Jail/jail.sqlite";
@@ -58,13 +59,26 @@ public class SQLite {
 							/* to_be_released is now also used for to-be-jailed players
 							 * least significant bit = to_be_released, 2-bit = online*/
 							+ "to_be_released INT);"
+
+							+ "CREATE INDEX index_jailedplayers_uuid ON jailedplayers (uuid);"
+
 							+ "CREATE TABLE jailedips"
 							+ "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
 							+ "ip TEXT NOT NULL,"
 							+ "name TEXT NOT NULL,"
 							+ "uuid BLOB,"
 							+ "UNIQUE(ip, name));"
-							+ "PRAGMA user_version = 2;";
+
+							+ "CREATE TABLE uuidip"
+							+ "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
+							+ "uuid BLOB NOT NULL,"
+							+ "ip BLOB NOT NULL,"
+							+ "UNIQUE(uuid, ip));"
+
+							+ "CREATE INDEX index_uuidip_uuid ON uuidip (uuid);"
+							+ "CREATE INDEX index_uuidip_ip ON uuidip (ip);"
+
+							+ "PRAGMA user_version = 3;";
 						st.executeUpdate(query);
 						break;
 				}
@@ -78,7 +92,23 @@ public class SQLite {
 							+ "UNIQUE(ip, name));"
 							+ "PRAGMA user_version = 2;";
 						st.executeUpdate(query);
-						break;
+				}
+				case 2: {
+						plugin.getLogger().info("Migrating database to version 3 ...");
+						String query = ""
+							+ "CREATE INDEX index_jailedplayers_uuid ON jailedplayers (uuid);"
+
+							+ "CREATE TABLE uuidip"
+							+ "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
+							+ "uuid BLOB NOT NULL,"
+							+ "ip BLOB NOT NULL,"
+							+ "UNIQUE(uuid, ip));"
+
+							+ "CREATE INDEX index_uuidip_uuid ON uuidip (uuid);"
+							+ "CREATE INDEX index_uuidip_ip ON uuidip (ip);"
+
+							+ "PRAGMA user_version = 3;";
+						st.executeUpdate(query);
 				}
 
 			}
@@ -345,6 +375,22 @@ public class SQLite {
 			st.setString(1, player.getAddress().getHostString());
 			st.setString(2, player.getName());
 			st.setString(3, player.getUniqueId().toString());
+			st.executeUpdate();
+			st.close();
+		} catch (Exception e) {
+			plugin.getLogger().info(e.getMessage());
+		}
+	}
+
+	/**
+	 * Records the given player's uuid/IP combination
+	 */
+	public static void insert_ip(Player player) {
+		try {
+			String query = "INSERT OR IGNORE INTO uuidip (ip, uuid) VALUES (?, ?)";
+			PreparedStatement st = conn.prepareStatement(query);
+			st.setString(1, player.getAddress().getHostString());
+			st.setString(2, player.getUniqueId().toString());
 			st.executeUpdate();
 			st.close();
 		} catch (Exception e) {
