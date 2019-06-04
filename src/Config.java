@@ -70,6 +70,9 @@ public class Config {
 	 * @return The jail's spawn location.
 	 */
 	public static Location get_spawn() {
+		if (spawn.getWorld() == null) {
+			loadConfig();
+		}
 		return spawn;
 	}
 
