@@ -28,7 +28,7 @@ public class JailedEventListener implements Listener {
 			return;
 
 		event.setKeepInventory(true);
-		event.setKeepLevel(true);
+		event.getDrops().clear();
 	}
 
 	/**
