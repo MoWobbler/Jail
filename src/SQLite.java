@@ -61,6 +61,7 @@ public class SQLite {
 							+ "to_be_released INT);"
 
 							+ "CREATE INDEX index_jailedplayers_uuid ON jailedplayers (uuid);"
+							+ "CREATE INDEX index_jailedplayers_playername ON jailedplayers (playername COLLATE NOCASE);"
 
 							+ "CREATE TABLE jailedips"
 							+ "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -68,6 +69,7 @@ public class SQLite {
 							+ "name TEXT NOT NULL,"
 							+ "uuid BLOB,"
 							+ "UNIQUE(ip, name));"
+							+ "CREATE INDEX index_jailedips_ip ON jailedips (ip);"
 
 							+ "CREATE TABLE uuidip"
 							+ "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -78,7 +80,7 @@ public class SQLite {
 							+ "CREATE INDEX index_uuidip_uuid ON uuidip (uuid);"
 							+ "CREATE INDEX index_uuidip_ip ON uuidip (ip);"
 
-							+ "PRAGMA user_version = 3;";
+							+ "PRAGMA user_version = 4;";
 						st.executeUpdate(query);
 						break;
 				}
@@ -108,6 +110,15 @@ public class SQLite {
 							+ "CREATE INDEX index_uuidip_ip ON uuidip (ip);"
 
 							+ "PRAGMA user_version = 3;";
+						st.executeUpdate(query);
+				}
+				case 3: {
+						plugin.getLogger().info("Migrating database to version 4 ...");
+						String query = ""
+							+ "CREATE INDEX index_jailedplayers_playername ON jailedplayers (playername COLLATE NOCASE);"
+							+ "CREATE INDEX index_jailedips_ip ON jailedips (ip);"
+
+							+ "PRAGMA user_version = 4;";
 						st.executeUpdate(query);
 				}
 
