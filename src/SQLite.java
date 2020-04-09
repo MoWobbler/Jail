@@ -39,6 +39,7 @@ public class SQLite {
 				user_version = rs.getInt("user_version");
 
 			rs.close();
+			st.close();
 
 			switch (user_version) {
 
@@ -56,33 +57,11 @@ public class SQLite {
 							+ "y INT,"
 							+ "z INT,"
 							+ "jailedtime INT,"
-							/* to_be_released is now also used for to-be-jailed players
-							 * least significant bit = to_be_released, 2-bit = online*/
 							+ "to_be_released INT);"
-
-							+ "CREATE INDEX index_jailedplayers_uuid ON jailedplayers (uuid);"
-							+ "CREATE INDEX index_jailedplayers_playername ON jailedplayers (playername COLLATE NOCASE);"
-
-							+ "CREATE TABLE jailedips"
-							+ "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
-							+ "ip TEXT NOT NULL,"
-							+ "name TEXT NOT NULL,"
-							+ "uuid BLOB,"
-							+ "UNIQUE(ip, name));"
-							+ "CREATE INDEX index_jailedips_ip ON jailedips (ip);"
-
-							+ "CREATE TABLE uuidip"
-							+ "(id INTEGER PRIMARY KEY AUTOINCREMENT,"
-							+ "uuid BLOB NOT NULL,"
-							+ "ip BLOB NOT NULL,"
-							+ "UNIQUE(uuid, ip));"
-
-							+ "CREATE INDEX index_uuidip_uuid ON uuidip (uuid);"
-							+ "CREATE INDEX index_uuidip_ip ON uuidip (ip);"
-
-							+ "PRAGMA user_version = 4;";
+							+ "PRAGMA user_version = 1;";
+						st = conn.createStatement();
 						st.executeUpdate(query);
-						break;
+						st.close();
 				}
 				case 1: {
 						plugin.getLogger().info("Migrating database to version 2 ...");
@@ -93,7 +72,9 @@ public class SQLite {
 							+ "uuid BLOB,"
 							+ "UNIQUE(ip, name));"
 							+ "PRAGMA user_version = 2;";
+						st = conn.createStatement();
 						st.executeUpdate(query);
+						st.close();
 				}
 				case 2: {
 						plugin.getLogger().info("Migrating database to version 3 ...");
@@ -110,7 +91,9 @@ public class SQLite {
 							+ "CREATE INDEX index_uuidip_ip ON uuidip (ip);"
 
 							+ "PRAGMA user_version = 3;";
+						st = conn.createStatement();
 						st.executeUpdate(query);
+						st.close();
 				}
 				case 3: {
 						plugin.getLogger().info("Migrating database to version 4 ...");
@@ -119,12 +102,12 @@ public class SQLite {
 							+ "CREATE INDEX index_jailedips_ip ON jailedips (ip);"
 
 							+ "PRAGMA user_version = 4;";
+						st = conn.createStatement();
 						st.executeUpdate(query);
+						st.close();
 				}
 
 			}
-
-			st.close();
 
 		} catch (Exception e) {
 			plugin.getLogger().info(e.getMessage() );
