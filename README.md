@@ -31,12 +31,11 @@ If used without arguments, gives general info about the jail. If a player is spe
 
 Compiling
 -----
-Requires a Java JDK, *make*, and a bukkit jar.
-
-To compile, run `make` in the directory. To specify the bukkit jar and/or java version, run it as
+Compiles using maven, run
 ```
-make BUKKIT=/path/to/bukkit.jar JAVA=1.7
+mvn clean package
 ```
+The built plugin will then be put into `target/Jail.jar`.
 
 Installation
 -----
