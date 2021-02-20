@@ -22,3 +22,12 @@ blocked_commands:
   - me
   - world
   - op
+
+# Path to directory containing geoip legacy databases.
+# For example "/usr/share/GeoIP"
+#
+# This is used for looking up user ASNs and countries.
+#
+# If your distro doesn't ship with these files by default, you can
+# download them from https://mailfud.org/geoip-legacy/
+geoipDatabase: null

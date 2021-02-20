@@ -1,12 +1,13 @@
 package net.simpvp.Jail;
 
+import java.net.InetAddress;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.UUID;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -102,6 +103,25 @@ public class SQLite {
 							+ "CREATE INDEX index_jailedips_ip ON jailedips (ip);"
 
 							+ "PRAGMA user_version = 4;";
+						st = conn.createStatement();
+						st.executeUpdate(query);
+						st.close();
+				}
+				case 4: {
+						plugin.getLogger().info("Migrating database to version 5 ...");
+						String query = ""
+							+ "DROP TABLE uuidip;"
+
+							+ "CREATE TABLE uuidip"
+							+ "(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+							+ "uuid BLOB NOT NULL,"
+							+ "ip BLOB NOT NULL,"
+							+ "name TEXT NOT NULL,"
+							+ "time INTEGER NOT NULL,"
+							+ "country TEXT,"
+							+ "asn INTEGER);"
+
+							+ "PRAGMA user_version = 5;";
 						st = conn.createStatement();
 						st.executeUpdate(query);
 						st.close();
@@ -381,16 +401,27 @@ public class SQLite {
 	 */
 	public static void insert_ip(Player player) {
 		try {
-			String query = "INSERT OR IGNORE INTO uuidip (ip, uuid) VALUES (?, ?)";
+			InetAddress ip = player.getAddress().getAddress();
+			Integer asn = GeoIP.getAsn(ip);
+			String query;
+			if (asn == null) {
+				query = "INSERT INTO uuidip (uuid, ip, name, time, country, asn) VALUES (?, ?, ?, ?, ?, null)";
+			} else {
+				query = "INSERT INTO uuidip (uuid, ip, name, time, country, asn) VALUES (?, ?, ?, ?, ?, ?)";
+			}
 			PreparedStatement st = conn.prepareStatement(query);
-			st.setString(1, player.getAddress().getHostString());
-			st.setString(2, player.getUniqueId().toString());
+			st.setString(1, player.getUniqueId().toString());
+			st.setString(2, player.getAddress().getHostString());
+			st.setString(3, player.getName());
+			st.setLong(4, System.currentTimeMillis() / 1000L);
+			st.setString(5, GeoIP.getCountry(ip));
+			if (asn != null) {
+				st.setLong(6, asn);
+			}
 			st.executeUpdate();
 			st.close();
 		} catch (Exception e) {
 			plugin.getLogger().info(e.getMessage());
 		}
 	}
-
 }
-

@@ -17,6 +17,7 @@ public class Jail extends JavaPlugin {
 
 	public void onEnable() {
 		Config.loadConfig();
+		GeoIP.init();
 		SQLite.connect();
 		getServer().getPluginManager().registerEvents(new JailedEventListener(), this);
 		getServer().getPluginManager().registerEvents(new PlayerLogin(), this);
@@ -30,6 +31,7 @@ public class Jail extends JavaPlugin {
 
 	public void onDisable() {
 		SQLite.close();
+		GeoIP.close();
 	}
 
 }
