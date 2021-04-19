@@ -1,8 +1,10 @@
 package net.simpvp.Jail;
 
-import java.net.InetAddress;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.maxmind.geoip.LookupService;
 import com.maxmind.geoip.Country;
@@ -58,6 +60,7 @@ public class GeoIP {
 		}
 	}
 
+	private static Pattern ASN_REGEX = Pattern.compile("^AS([0-9]+).*");
 	public static Integer getAsn(InetAddress ip) {
 		if (asn4 == null || asn6 == null) {
 			return null;
@@ -73,8 +76,12 @@ public class GeoIP {
 			return null;
 		}
 
-		asn = asn.replaceAll("[^0-9]", "");
-		return Integer.valueOf(asn);
+		Matcher m = ASN_REGEX.matcher(asn);
+		if (!m.find()) {
+			Jail.instance.getLogger().info("Jail ASN regex did not match: " + asn);
+		}
+		String match = m.group(1);
+		return Integer.valueOf(match);
 	}
 
 	public static String getCountry(InetAddress ip) {
