@@ -30,6 +30,9 @@ public class PlayerLogin implements Listener {
 					}
 				}
 			}
+
+			check_asn(player);
+
 			return;
 		}
 
@@ -70,5 +73,30 @@ public class PlayerLogin implements Listener {
 		jailedplayer.add();
 	}
 
-}
+	private void check_asn(Player player) {
+		if (GeoIP.bad_asns == null || GeoIP.bad_asns.isEmpty()) {
+			return;
+		}
 
+		String as = GeoIP.getAs(player.getAddress().getAddress());
+		Integer asn = GeoIP.getAsn(as);
+		if (asn == null) {
+			return;
+		}
+
+		if (!GeoIP.bad_asns.contains(asn)) {
+			Jail.instance.getLogger().info(String.format("%s is joining from %s", player.getName(), as));
+			return;
+		}
+
+		String msg = player.getName() + " is joining from bad network " + as;
+		Jail.instance.getLogger().info(msg);
+		for (Player p : Jail.instance.getServer().getOnlinePlayers()) {
+			if (!p.isOp()) {
+				continue;
+			}
+
+			p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + msg);
+		}
+	}
+}
