@@ -43,6 +43,7 @@ public class Commands implements CommandExecutor {
 			show_info(player, args);
 		} else if (label.equals("jailreload")) {
 			Config.loadConfig();
+			GeoIP.init();
 			send_message("Jail config has been reloaded.", player, ChatColor.GOLD);
 		}
 

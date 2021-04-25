@@ -4,8 +4,9 @@ import java.io.File;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,7 +23,8 @@ public class GeoIP {
 	private static LookupService country4 = null;
 	private static LookupService country6 = null;
 
-	public static HashSet<Integer> bad_asns = null;
+	// Key is ASN, value is reason it's added to list.
+	public static HashMap<Integer, String> bad_asns = null;
 
 	public static void init() {
 		String geoipDatabaseDir = Jail.instance.getConfig().getString("geoipDatabase");
@@ -52,12 +54,19 @@ public class GeoIP {
 			File f = new File(Jail.instance.getDataFolder(), "bad_asns.yaml");
 			if (f.exists()) {
 				Configuration c = YamlConfiguration.loadConfiguration(f);
-				bad_asns = new HashSet<>(c.getIntegerList("badasns"));
+				bad_asns = new HashMap<>();
+				for (Map<String, Object> value : (List<Map<String, Object>>) c.getList("badasns")) {
+					Integer asn = (Integer) value.get("asn");
+					String reason = (String) value.get("reason");
+					bad_asns.put(asn, reason);
+				}
+
 				Jail.instance.getLogger().info("Read bad_asns.yaml");
 			}
 		} catch (Exception e) {
 			Jail.instance.getLogger().severe("Error instantiating bad AS list " + e);
 			e.printStackTrace();
+			bad_asns = null;
 		}
 	}
 

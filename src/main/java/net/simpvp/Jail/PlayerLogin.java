@@ -84,12 +84,13 @@ public class PlayerLogin implements Listener {
 			return;
 		}
 
-		if (!GeoIP.bad_asns.contains(asn)) {
+		String reason = GeoIP.bad_asns.get(asn);
+		if (reason == null) {
 			Jail.instance.getLogger().info(String.format("%s is joining from %s", player.getName(), as));
 			return;
 		}
 
-		String msg = player.getName() + " is joining from bad network " + as;
+		String msg = String.format("%s is joining from bad network %s. Listed reason: %s", player.getName(), as, reason);
 		Jail.instance.getLogger().info(msg);
 		for (Player p : Jail.instance.getServer().getOnlinePlayers()) {
 			if (!p.isOp()) {
