@@ -2,8 +2,9 @@ name: Jail
 main: net.simpvp.Jail.Jail
 version: 4
 api-version: 1.13
-author: C4K3.net
+author: simpvp.net
 description: A minimalist jail plugin.
+softdepend: [Multiverse-Core]
 commands:
   jail:
     description: Jail a player.
