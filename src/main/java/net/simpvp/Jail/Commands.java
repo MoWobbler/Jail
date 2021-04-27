@@ -272,6 +272,12 @@ public class Commands implements CommandExecutor {
 
 			if (target == null) {
 				jailedplayer = SQLite.get_player_info(args[0]);
+				if (jailedplayer == null) {
+					try {
+						UUID target_uuid = UUID.fromString(args[0]);
+						jailedplayer = SQLite.get_player_info(target_uuid);
+					} catch (Exception e) { }
+				}
 			} else {
 				jailedplayer = SQLite.get_player_info(target.getUniqueId());
 			}
