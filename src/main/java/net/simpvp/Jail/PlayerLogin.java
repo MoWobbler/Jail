@@ -16,7 +16,7 @@ public class PlayerLogin implements Listener {
 	public void onPlayerLogin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
 		SQLite.insert_ip(player);
-		final JailedPlayer jailedplayer = SQLite.get_player_info(player.getUniqueId());
+		final JailedPlayer jailedplayer = SQLite.get_jailed_player(player.getUniqueId());
 		if (jailedplayer == null) {
 			String jailed_friends = SQLite.get_ip_jailed(
 					player.getAddress().getHostString());
@@ -55,6 +55,7 @@ public class PlayerLogin implements Listener {
 						player.teleport(jailedplayer.location);
 						SQLite.delete_player_info(player.getUniqueId());
 						Jail.instance.getLogger().info("Releasing " + jailedplayer.playername + " from jail.");
+						player.sendMessage(ChatColor.GREEN + "You have been released from jail.");
 						this.cancel();
 					}
 				}

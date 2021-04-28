@@ -26,7 +26,6 @@ public class Jail extends JavaPlugin {
 		getCommand("unjail").setExecutor(new Commands());
 		getCommand("jailinfo").setExecutor(new Commands());
 		getCommand("jailreload").setExecutor(new Commands());
-
 	}
 
 	public void onDisable() {
@@ -35,4 +34,3 @@ public class Jail extends JavaPlugin {
 	}
 
 }
-

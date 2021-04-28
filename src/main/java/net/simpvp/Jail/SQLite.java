@@ -126,11 +126,22 @@ public class SQLite {
 						st.executeUpdate(query);
 						st.close();
 				}
+				case 5: {
+						plugin.getLogger().info("Migrating database to version 6 ...");
+						String query = ""
+							+ "CREATE INDEX index_uuidip_name ON uuidip (name COLLATE NOCASE);"
+							+ "DROP INDEX index_jailedplayers_playername;"
 
+							+ "PRAGMA user_version = 6;";
+						st = conn.createStatement();
+						st.executeUpdate(query);
+						st.close();
+
+				}
 			}
 
 		} catch (Exception e) {
-			plugin.getLogger().info(e.getMessage() );
+			plugin.getLogger().info(e.getMessage());
 			return;
 		}
 
@@ -153,7 +164,7 @@ public class SQLite {
 	 * @param uuid UUID of the player
 	 * @return JailedPlayer object of info about the player
 	 */
-	public static JailedPlayer get_player_info(UUID uuid) {
+	public static JailedPlayer get_jailed_player(UUID uuid) {
 		JailedPlayer ret = null;
 
 		try {
@@ -164,12 +175,12 @@ public class SQLite {
 
 			while (rs.next()) {
 				Location location = new Location(
-						plugin.getServer().getWorld(rs.getString("world")), 
-						(double) rs.getInt("x") + 0.5, 
-						(double) rs.getInt("y"), 
+						plugin.getServer().getWorld(rs.getString("world")),
+						(double) rs.getInt("x") + 0.5,
+						(double) rs.getInt("y"),
 						(double) rs.getInt("z") + 0.5);
-				ret = new JailedPlayer(uuid, rs.getString("playername"), 
-						rs.getString("reason"), rs.getString("jailer"), 
+				ret = new JailedPlayer(uuid, rs.getString("playername"),
+						rs.getString("reason"), rs.getString("jailer"),
 						location, rs.getInt("jailedtime"),
 						(rs.getInt("to_be_released") & 1) != 0,
 						(rs.getInt("to_be_released") & 2) == 0);
@@ -185,41 +196,78 @@ public class SQLite {
 	}
 
 	/**
-	 * Gets the info on a jailed person, returns null if player is not jailed
-	 * @param playername The jailed player's name
-	 * @return JailedPlayer object of info about the player
+	 * Given a playername (case-insensitive) get all currently jailed players who have ever used that name.
+	 *
+	 * Returns an empty list if no players with this name were found. May
+	 * return more than 1 result if multiple accounts have used the same
+	 * name.
 	 */
-	public static JailedPlayer get_player_info(String playername) {
-		JailedPlayer ret = null;
+	public static ArrayList<JailedPlayer> get_jailed_players(String playername) throws java.sql.SQLException {
+		ArrayList<JailedPlayer> ret = new ArrayList<>();
 
-		try {
-			String query = "SELECT * FROM jailedplayers WHERE playername = ? COLLATE NOCASE";
-			PreparedStatement st = conn.prepareStatement(query);
-			st.setString(1, playername);
-			ResultSet rs = st.executeQuery();
+		String query = "SELECT * FROM jailedplayers WHERE uuid IN ( SELECT uuid FROM uuidip WHERE name = ? COLLATE NOCASE GROUP BY uuid )";
+		PreparedStatement st = conn.prepareStatement(query);
+		st.setString(1, playername);
+		ResultSet rs = st.executeQuery();
 
-			while (rs.next()) {
-				Location location = new Location(
-						plugin.getServer().getWorld(rs.getString("world")), 
-						(double) rs.getInt("x") + 0.5, 
-						(double) rs.getInt("y"), 
-						(double) rs.getInt("z") + 0.5);
-				ret = new JailedPlayer(UUID.fromString(rs.getString("uuid")),
-						rs.getString("playername"), 
-						rs.getString("reason"), rs.getString("jailer"), 
-						location, rs.getInt("jailedtime"),
-						(rs.getInt("to_be_released") & 1) != 0,
-						(rs.getInt("to_be_released") & 2) == 0);
+		while (rs.next()) {
+			Location location = new Location(
+					plugin.getServer().getWorld(rs.getString("world")),
+					(double) rs.getInt("x") + 0.5,
+					(double) rs.getInt("y"),
+					(double) rs.getInt("z") + 0.5);
+			JailedPlayer j = new JailedPlayer(UUID.fromString(rs.getString("uuid")),
+					rs.getString("playername"),
+					rs.getString("reason"), rs.getString("jailer"),
+					location, rs.getInt("jailedtime"),
+					(rs.getInt("to_be_released") & 1) != 0,
+					(rs.getInt("to_be_released") & 2) == 0);
+			ret.add(j);
+		}
+
+		/* If we didn't get any results on player name, try searching by uuid */
+		if (ret.isEmpty()) {
+			UUID uuid = null;
+			try {
+				uuid = UUID.fromString(playername);
+			} catch (Exception e) {}
+
+			if (uuid != null) {
+				JailedPlayer j = SQLite.get_jailed_player(uuid);
+
+				if (j != null) {
+					ret.add(j);
+				}
 			}
-
-			rs.close();
-			st.close();
-		} catch (Exception e) {
-			plugin.getLogger().info(e.getMessage());
 		}
 
 		return ret;
 	}
+
+	/**
+	 * Given a playername (case-insensitive) get the UUIDs that this may correspond to.
+	 *
+	 * Returns an empty list if no players with this name were found. May
+	 * return more than 1 result if multiple accounts have used the same
+	 * name.
+	 */
+	/* Commented out as not currently needed. Maybe delete?
+	private static ArrayList<UUID> get_player_uuids(String playername) throws java.sql.SQLException {
+		ArrayList<UUID> ret = new ArrayList<>();
+
+		String query = "SELECT uuid FROM uuidip WHERE name = ? COLLATE NOCASE GROUP BY uuid";
+		PreparedStatement st = conn.prepareStatement(query);
+		st.setString(1, playername);
+		ResultSet rs = st.executeQuery();
+
+		while (rs.next()) {
+			UUID uuid = UUID.fromString(rs.getString("uuid"));
+			ret.add(uuid);
+		}
+
+		return ret;
+	}
+	*/
 
 	/**
 	 * Inserts the info on a jailed player into the database

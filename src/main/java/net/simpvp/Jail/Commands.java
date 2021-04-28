@@ -1,22 +1,21 @@
 package net.simpvp.Jail;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.UUID;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Location;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class Commands implements CommandExecutor {
@@ -35,16 +34,22 @@ public class Commands implements CommandExecutor {
 			return true;
 		}
 
-		if (label.equals("jail")) {
-			jail_player(player, args);
-		} else if (label.equals("unjail")) {
-			unjail_player(player, args);
-		} else if (label.equals("jailinfo")) {
-			show_info(player, args);
-		} else if (label.equals("jailreload")) {
-			Config.loadConfig();
-			GeoIP.init();
-			send_message("Jail config has been reloaded.", player, ChatColor.GOLD);
+		try {
+			if (label.equals("jail")) {
+				jail_player(player, args);
+			} else if (label.equals("unjail")) {
+				unjail_player(player, args);
+			} else if (label.equals("jailinfo")) {
+				show_info(player, args);
+			} else if (label.equals("jailreload")) {
+				Config.loadConfig();
+				GeoIP.init();
+				send_message("Jail config has been reloaded.", player, ChatColor.GOLD);
+			}
+		} catch (java.sql.SQLException e) {
+			Jail.instance.getLogger().severe("Error handling command " + label + ": " + e);
+			e.printStackTrace();
+			send_message("Encountered exception running command.", player, ChatColor.RED);
 		}
 
 		return true;
@@ -169,7 +174,7 @@ public class Commands implements CommandExecutor {
 				sjailer = jailer.getName();
 		}
 
-		JailedPlayer tmp = SQLite.get_player_info(uuid);
+		JailedPlayer tmp = SQLite.get_jailed_player(uuid);
 		if (tmp != null) {
 			if (tmp.to_be_released) {
 				SQLite.set_has_been_online(uuid);
@@ -221,82 +226,78 @@ public class Commands implements CommandExecutor {
 		jailedplayer.insert();
 	}
 
-	private void unjail_player(Player player, String[] args) {
+	private void unjail_player(Player player, String[] args) throws java.sql.SQLException {
 		@SuppressWarnings("deprecation") /* deprecated for reasons not relevant here */
 		Player target = plugin.getServer().getPlayer(args[0]);
 
 		if (target != null) {
-			JailedPlayer jailedplayer = SQLite.get_player_info(target.getUniqueId());
+			JailedPlayer jailedplayer = SQLite.get_jailed_player(target.getUniqueId());
 
 			if (jailedplayer != null) {
-				Jail.jailed_players.remove(jailedplayer.uuid);
-				target.teleport(jailedplayer.location);
-				SQLite.delete_player_info(jailedplayer.uuid);
 				announce_message("Unjailing " + target.getName(), player);
+				target.teleport(jailedplayer.location);
+				Jail.jailed_players.remove(jailedplayer.uuid);
+				SQLite.delete_player_info(jailedplayer.uuid);
 				target.sendMessage(ChatColor.GREEN + "You have been released from jail.");
 				return;
 			}
 		}
 
-		/* at this point it is assumed the player is not online */
-		JailedPlayer jailedplayer = SQLite.get_player_info(args[0]);
+		ArrayList<JailedPlayer> jailed_players = SQLite.get_jailed_players(args[0]);
 
-		if (jailedplayer != null && jailedplayer.online == false) {
+		if (jailed_players.isEmpty()) {
+			send_message("Could not find any jailed players matching that name.", player, ChatColor.RED);
+			return;
+		}
+
+		if (jailed_players.size() >= 2) {
+			show_info(player, jailed_players);
+			send_message("Found multiple jailed players matching that name. Please select by uuid.", player, ChatColor.RED);
+			return;
+		}
+
+		JailedPlayer jailedplayer = jailed_players.get(0);
+		target = plugin.getServer().getPlayer(jailedplayer.uuid);
+
+		if (target != null) {
+			announce_message("Unjailing " + target.getName(), player);
+			target.teleport(jailedplayer.location);
+			Jail.jailed_players.remove(jailedplayer.uuid);
+			SQLite.delete_player_info(jailedplayer.uuid);
+			target.sendMessage(ChatColor.GREEN + "You have been released from jail.");
+		} else if (jailedplayer.online == false) {
 			SQLite.delete_player_info(jailedplayer.uuid);
 			announce_message("Unjailing never-jailed player " + jailedplayer.playername, player);
-			return;
-		}
-
-		if (jailedplayer != null) {
+		} else {
 			SQLite.set_to_be_released(jailedplayer.uuid);
 			announce_message("Unjailing offline player " + jailedplayer.playername, player);
-			return;
 		}
-
-		send_message("No such player found.", player, ChatColor.RED);
 	}
 
-	private void show_info(Player player, String[] args) {
+	private void show_info(Player player, String[] args) throws java.sql.SQLException {
 		if (args.length > 1) {
 			send_message("Invalid arguments. Correct usage is /jailinfo [player]", player, ChatColor.RED);
 			return;
 		}
 
-		if (args.length == 1 ) {
-			JailedPlayer jailedplayer;
-
-			/* Player name is not used in ways that break after the
-			 * UUID change */
+		if (args.length == 1) {
 			@SuppressWarnings("deprecation")
 			Player target = Jail.instance.getServer().getPlayerExact(args[0]);
+			ArrayList<JailedPlayer> jailed_players = null;
 
 			if (target == null) {
-				jailedplayer = SQLite.get_player_info(args[0]);
-				if (jailedplayer == null) {
-					try {
-						UUID target_uuid = UUID.fromString(args[0]);
-						jailedplayer = SQLite.get_player_info(target_uuid);
-					} catch (Exception e) { }
-				}
+				jailed_players = SQLite.get_jailed_players(args[0]);
 			} else {
-				jailedplayer = SQLite.get_player_info(target.getUniqueId());
+				JailedPlayer j = SQLite.get_jailed_player(target.getUniqueId());
+				if (j == null) {
+					send_message("That player does not appear to be jailed.", player, ChatColor.RED);
+					return;
+				}
+				jailed_players = new ArrayList<>();
+				jailed_players.add(j);
 			}
 
-			if (jailedplayer == null) {
-				send_message("That player does not appear to be jailed.", player, ChatColor.RED);
-				return;
-			}
-
-			SimpleDateFormat sdf = new SimpleDateFormat("d MMMM yyyy, H:m:s");
-			String msg = jailedplayer.playername + " (" + jailedplayer.uuid + ")"
-				+ " was jailed on " + sdf.format(new Date(jailedplayer.jailed_time * 1000L))
-				+ " by " + jailedplayer.jailer
-				+ " for" + jailedplayer.reason + ".";
-			if (jailedplayer.to_be_released)
-				msg += "\nThis player is set to be released";
-
-			send_message(msg, player, ChatColor.GOLD);
-
+			show_info(player, jailed_players);
 		} else if (args.length == 0) {
 			send_message("The jail is in world " + Config.world + ". The two jail corners are at: " + Config.x1 + " " + Config.y1 + " " + Config.z1 + ", and " + Config.x2 + " " + Config.y2 + " " + Config.z2, player, ChatColor.GREEN);
 			send_message("The jail spawn point is at " + Config.spawn.getWorld().getName() + " " + Config.spawn.getBlockX() + " " + Config.spawn.getBlockY() + " " + Config.spawn.getBlockZ(), player, ChatColor.GREEN);
@@ -305,5 +306,14 @@ public class Commands implements CommandExecutor {
 		}
 	}
 
-}
+	private void show_info(Player player, ArrayList<JailedPlayer> jailed_players) {
+		if (jailed_players == null || jailed_players.isEmpty()) {
+			send_message("Could not find any jailed players matching that name.", player, ChatColor.RED);
+			return;
+		}
 
+		for (JailedPlayer j : jailed_players) {
+			send_message(j.get_info(), player, ChatColor.GOLD);
+		}
+	}
+}

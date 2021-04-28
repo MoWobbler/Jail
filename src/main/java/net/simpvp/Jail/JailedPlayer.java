@@ -1,5 +1,7 @@
 package net.simpvp.Jail;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.UUID;
 
 import org.bukkit.Location;
@@ -43,6 +45,24 @@ public class JailedPlayer {
 		if (!this.online)
 			ret ^= 2;
 		return ret;
+	}
+
+	/**
+	 * Returns a text description of this jailed player.
+	 */
+	public String get_info() {
+		SimpleDateFormat sdf = new SimpleDateFormat("d MMMM yyyy, H:m:s");
+
+		String msg = this.playername + " (" + this.uuid + ")"
+			+ " was jailed on " + sdf.format(new Date(this.jailed_time * 1000L))
+			+ " by " + this.jailer
+			+ " for" + this.reason + ".";
+
+		if (this.to_be_released) {
+			msg += "\nThis player is set to be released";
+		}
+
+		return msg;
 	}
 
 }
