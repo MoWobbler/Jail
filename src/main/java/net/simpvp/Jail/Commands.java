@@ -6,8 +6,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import org.json.JSONObject;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -128,37 +128,46 @@ public class Commands implements CommandExecutor {
 					conn.connect();
 					BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 					String resp = reader.readLine();
-					if (resp == null)
-						resp = "";
+					if (resp == null) {
+						Jail.instance.getLogger().severe("Empty response from mojang API");
+						send_error(target_name, jailer_uuid);
+						return;
+					}
 
-					Pattern p = Pattern.compile("\"id\":\"(\\S+?)\"");
-					Matcher m = p.matcher(resp);
-					m.find();
-					String uuid_str = m.group(1);
+					JSONObject j = new JSONObject(resp);
+					final String name = j.getString("name");
+					String uuid_str = j.getString("id");
 					uuid_str = uuid_str.replaceAll("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5");
 
 					final UUID uuid = UUID.fromString(uuid_str);
 					new BukkitRunnable() {
 						@Override
 						public void run() {
-							effect_jail(uuid, target_name, reason,
+							effect_jail(uuid, name, reason,
 									jailer_uuid, jailer, announce);
 						}
 					}.runTask(plugin);
 
 				} catch (Exception e) {
-					new BukkitRunnable() {
-						@Override
-						public void run() {
-							send_message("Error retrieving data for " + target_name,
-								       plugin.getServer().getPlayer(jailer_uuid),
-								       ChatColor.RED);
-						}
-					}.runTask(plugin);
+					Jail.instance.getLogger().severe("Error getting player UUID: " + e);
+					e.printStackTrace();
+					send_error(target_name, jailer_uuid);
 				}
 
 			}
+
+			private void send_error(final String target_name, final UUID jailer_uuid) {
+				new BukkitRunnable() {
+					@Override
+					public void run() {
+						send_message("Error retrieving data for " + target_name,
+								plugin.getServer().getPlayer(jailer_uuid),
+								ChatColor.RED);
+					}
+				}.runTask(plugin);
+			}
 		}.runTaskAsynchronously(plugin);
+
 	}
 
 	/**
