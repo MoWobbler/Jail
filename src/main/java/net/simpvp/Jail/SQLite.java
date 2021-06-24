@@ -401,27 +401,33 @@ public class SQLite {
 	}
 
 	/**
-	 * Gets the name of all jailed players from the given ip
+	 * Gets a comma-separated list of all jailed players who have used the given ip.
+	 *
+	 * Returns null if there were no matches.
 	 */
 	public static String get_ip_jailed(String ip) {
 		String ret = null;
+
 		try {
-			String query = "SELECT * FROM jailedips WHERE ip = ?";
+			String query = "SELECT playername FROM jailedplayers WHERE uuid IN ( SELECT uuid FROM uuidip WHERE ip = ? GROUP BY UUID )";
 			PreparedStatement st = conn.prepareStatement(query);
 			st.setString(1, ip);
 			ResultSet rs = st.executeQuery();
 
 			while (rs.next()) {
 				if (ret == null) {
-					ret = rs.getString("name");
+					ret = rs.getString("playername");
 				} else {
-					ret += ", " + rs.getString("name");
+					ret += ", " + rs.getString("playername");
 				}
 			}
+
 			rs.close();
 			st.close();
 		} catch (Exception e) {
-			plugin.getLogger().info(e.getMessage());
+			ret = null;
+			plugin.getLogger().severe("Error in get_ip_jailed: " + e);
+			e.printStackTrace();
 		}
 
 		return ret;
