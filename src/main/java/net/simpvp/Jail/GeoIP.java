@@ -48,6 +48,7 @@ public class GeoIP {
 		} catch (Exception e) {
 			Jail.instance.getLogger().severe("Error instantiating GeoIP database " + e);
 			e.printStackTrace();
+			return;
 		}
 
 		try {
