@@ -1,18 +1,24 @@
 package net.simpvp.Jail;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerPickupArrowEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
@@ -131,6 +137,41 @@ public class JailedEventListener implements Listener {
 
 		event.setCancelled(true);
 	}
+	
+	@EventHandler(priority=EventPriority.LOWEST,ignoreCancelled=true)
+	public void onPlayerArmorStandManipulate(PlayerArmorStandManipulateEvent event) {
+		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
+			return;
 
+		event.setCancelled(true);
+	}
+	
+	@EventHandler(priority=EventPriority.LOWEST,ignoreCancelled=true)
+	public void onPlayerPickupArrow(PlayerPickupArrowEvent event) {
+		if (!(Jail.jailed_players.contains(event.getPlayer().getUniqueId())))
+			return;
+
+		event.setCancelled(true);
+	}
+	
+	@EventHandler(priority=EventPriority.LOWEST,ignoreCancelled=true)
+	public void onEntityShootBow(EntityShootBowEvent event) {
+		if (!(Jail.jailed_players.contains(event.getEntity().getUniqueId())))
+			return;
+
+		event.setCancelled(true);
+	}
+	
+	/**
+	 * Prevent jailed players from placing end crystals
+	 */
+	@EventHandler(priority=EventPriority.LOWEST,ignoreCancelled=true)
+	public void onCrystalPlace(PlayerInteractEvent event) {
+	    if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) && Jail.jailed_players.contains(event.getPlayer().getUniqueId())) {
+	        if (event.getPlayer().getInventory().getItemInMainHand().getType().equals(Material.END_CRYSTAL)) {
+	        	event.setCancelled(true);  
+	        }
+	    }
+	}
 }
 
