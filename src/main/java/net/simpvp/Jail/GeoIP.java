@@ -15,6 +15,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import com.maxmind.geoip.Country;
 import com.maxmind.geoip.LookupService;
+import org.bukkit.entity.Player;
 
 public class GeoIP {
 
@@ -143,5 +144,23 @@ public class GeoIP {
 		}
 
 		return country.getCode();
+	}
+
+	public static String check_asn(InetAddress address) {
+		if (GeoIP.bad_asns == null || GeoIP.bad_asns.isEmpty()) {
+			return null;
+		}
+
+		String as = GeoIP.getAs(address);
+		Integer asn = GeoIP.getAsn(as);
+		if (asn == null) {
+			return null;
+		}
+
+		String reason = GeoIP.bad_asns.get(asn);
+		if (reason == null) {
+			return null;
+		}
+		return reason;
 	}
 }
