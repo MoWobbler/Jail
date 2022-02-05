@@ -19,6 +19,8 @@ public class AntiVPNCommand implements Listener,CommandExecutor{
 	
 	public static int hours_required;
 
+	private long last_sent_message = -1;
+
 	public AntiVPNCommand(Jail plugin) {
 		hours_required = plugin.getConfig().getInt("novpns");
 		plugin.getLogger().info("NoVpns set to " + hours_required);
@@ -31,8 +33,22 @@ public class AntiVPNCommand implements Listener,CommandExecutor{
 		if (!requiredConditions(player) && reason != null) {
 			event.disallow(PlayerLoginEvent.Result.KICK_OTHER, ChatColor.RED + "Please turn off your VPN to connect");
 			String as = GeoIP.getAs(event.getAddress());
-			Jail.instance.getLogger().info("Blocking " + player.getDisplayName() + " from joining with a vpn");
-			Jail.instance.getLogger().info(player.getDisplayName() + " tried to join from AS " + as + " Reason: " + reason);
+
+			String msg = String.format("[NoVPNs] Blocking %s from joining from %s. Reason: %s", player.getName(), as, reason);
+			Jail.instance.getLogger().info(msg);
+
+			long now = System.currentTimeMillis() / 1000L;
+			if (last_sent_message + 60 < now) {
+				last_sent_message = now;
+
+				for (Player p : Jail.instance.getServer().getOnlinePlayers()) {
+					if (!p.isOp()) {
+						continue;
+					}
+
+					p.sendMessage(ChatColor.RED + msg);
+				}
+			}
 		}
 	}
 	
