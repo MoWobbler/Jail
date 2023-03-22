@@ -1,14 +1,7 @@
 package net.simpvp.Jail;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.UUID;
-
-import org.json.JSONObject;
-
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -17,6 +10,13 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.UUID;
 
 public class Commands implements CommandExecutor {
 	//FIXME: Write docs for entire class
@@ -85,7 +85,7 @@ public class Commands implements CommandExecutor {
 		}
 
 		@SuppressWarnings("deprecation") /* Warnings have been read */
-		Player target = plugin.getServer().getPlayer(args[0]);
+				Player target = plugin.getServer().getPlayer(args[0]);
 
 		UUID jailer_uuid = null;
 		String jailer = null;
@@ -128,17 +128,13 @@ public class Commands implements CommandExecutor {
 					URLConnection conn = url.openConnection();
 					conn.connect();
 					BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-					String resp = reader.readLine();
-					if (resp == null) {
-						Jail.instance.getLogger().severe("Empty response from mojang API");
-						send_error(target_name, jailer_uuid);
-						return;
-					}
 
-					JSONObject j = new JSONObject(resp);
-					final String name = j.getString("name");
-					String uuid_str = j.getString("id");
-					uuid_str = uuid_str.replaceAll("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5");
+					JsonObject object = new JsonParser().parse(reader).getAsJsonObject();
+					String uuid_str = object
+							.get("id").getAsString()
+							.replaceAll("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5");
+					String name = object
+							.get("name").getAsString();
 
 					final UUID uuid = UUID.fromString(uuid_str);
 					new BukkitRunnable() {
@@ -175,7 +171,7 @@ public class Commands implements CommandExecutor {
 	 * Actually carries out the jailing of the player.
 	 */
 	private void effect_jail(UUID uuid, String target_name, String reason,
-			UUID jailer_uuid, String sjailer, boolean announce) {
+							 UUID jailer_uuid, String sjailer, boolean announce) {
 
 		Player jailer = null;
 		if (jailer_uuid != null) {
@@ -238,7 +234,7 @@ public class Commands implements CommandExecutor {
 
 	private void unjail_player(Player player, String[] args) throws java.sql.SQLException {
 		@SuppressWarnings("deprecation") /* deprecated for reasons not relevant here */
-		Player target = plugin.getServer().getPlayer(args[0]);
+				Player target = plugin.getServer().getPlayer(args[0]);
 
 		if (target != null) {
 			JailedPlayer jailedplayer = SQLite.get_jailed_player(target.getUniqueId());
