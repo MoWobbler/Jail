@@ -1,7 +1,14 @@
 package net.simpvp.Jail;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.UUID;
+
+import org.json.JSONObject;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -10,13 +17,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.UUID;
 
 public class Commands implements CommandExecutor {
 	//FIXME: Write docs for entire class
@@ -110,7 +110,6 @@ public class Commands implements CommandExecutor {
 			send_message("Invalid usage. You must specify a reason for jailing.", player, ChatColor.RED);
 			return;
 		}
-
 		if (target == null) {
 			get_uuid(args[0], reason, jailer_uuid, jailer, announce);
 		} else {
@@ -128,13 +127,27 @@ public class Commands implements CommandExecutor {
 					URLConnection conn = url.openConnection();
 					conn.connect();
 					BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+					String line;
+					StringBuilder response = new StringBuilder();
 
-					JsonObject object = new JsonParser().parse(reader).getAsJsonObject();
-					String uuid_str = object
-							.get("id").getAsString()
-							.replaceAll("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5");
-					String name = object
-							.get("name").getAsString();
+					while ((line = reader.readLine()) != null) {
+						response.append(line);
+					}
+
+					Jail.instance.getLogger().info("response:" + response);
+					if (response == null) {
+						Jail.instance.getLogger().severe("Empty response from mojang API");
+						send_error(target_name, jailer_uuid);
+						return;
+					}
+
+					String resp = response.toString();
+					resp = resp.replaceAll("\\s+", "");
+
+					JSONObject j = new JSONObject(resp);
+					final String name = j.getString("name");
+					String uuid_str = j.getString("id");
+					uuid_str = uuid_str.replaceAll("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5");
 
 					final UUID uuid = UUID.fromString(uuid_str);
 					new BukkitRunnable() {
